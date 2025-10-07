@@ -31,4 +31,310 @@
     .btn.ghost{background:transparent;border:1px dashed var(--line)}
     .btnrow{display:flex;gap:10px;flex-wrap:wrap}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0f1a3b;color:var(--muted);font-size:12px}
-    pre{background:#0b132b;border:1px solid var(--line);border-radius:14px;padding:14px;overflo
+    pre{background:#0b132b;border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .tip{border-left:3px solid var(--accent);padding-left:10px;color:var(--muted)}
+    .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b132b;border:1px solid var(--line);border-radius:8px;padding:2px 6px}
+    .footer{margin:18px 0 24px;color:var(--muted);text-align:center;font-size:12px}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>🧩 Prompt Formatter</h1>
+      <div class="row">
+        <button class="btn ghost" id="share">Share as Link</button>
+        <button class="btn" id="save">Save Template</button>
+        <select id="templates" class="btn" title="Saved templates">
+          <option value="">Load Template…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <div class="card stack">
+          <div class="two">
+            <div>
+              <label>Role</label>
+              <input id="role" placeholder="e.g., You are a senior YouTube content strategist for a crypto brand (Bitcoin Hitpoint)…">
+            </div>
+            <div>
+              <label>Tone</label>
+              <input id="tone" placeholder="e.g., formal, creative, data-backed, crisp, actionable">
+            </div>
+          </div>
+          <div>
+            <label>Primary Goal</label>
+            <textarea id="goal" placeholder="State the outcome in 1–2 lines. What must the AI deliver?"></textarea>
+          </div>
+          <div class="two">
+            <div>
+              <label>Audience</label>
+              <input id="aud" placeholder="e.g., beginner retail traders in India">
+            </div>
+            <div>
+              <label>Output Format</label>
+              <input id="fmt" placeholder="e.g., Markdown with H2 headings and bullet points; 120–160 words; include emojis sparingly">
+            </div>
+          </div>
+          <div>
+            <label>Key Inputs / Context</label>
+            <textarea id="ctx" placeholder="Paste raw notes, links, or constraints here"></textarea>
+          </div>
+          <div class="two">
+            <div>
+              <label>Hard Constraints</label>
+              <textarea id="cons" placeholder="Non-negotiables: e.g., avoid price predictions; include disclaimer; cite dates"></textarea>
+            </div>
+            <div>
+              <label>Do / Don't</label>
+              <textarea id="rules" placeholder="Do: short, practical tips. Don't: hype or vague claims."></textarea>
+            </div>
+          </div>
+          <div class="two">
+            <div>
+              <label>Examples (few-shot)</label>
+              <textarea id="shots" placeholder="Optionally add 1–2 miniature examples of perfect outputs."></textarea>
+            </div>
+            <div>
+              <label>Step Plan</label>
+              <textarea id="steps" placeholder="If useful, outline explicit steps the model must follow."></textarea>
+            </div>
+          </div>
+          <div>
+            <label>Final Command / Ask</label>
+            <input id="ask" placeholder="e.g., Generate 10 hook-first reel titles with 70–90 char each.">
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="antiHalluc" checked> Add anti-hallucination / honesty clause</label>
+          </div>
+          <div class="btnrow">
+            <button class="btn primary" id="build">Generate Prompt</button>
+            <button class="btn" id="copy">Copy</button>
+            <button class="btn" id="copyMD">Copy as Markdown</button>
+            <button class="btn" id="download">Download .txt</button>
+            <button class="btn" id="clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h2 style="margin:0">Output</h2>
+            <span class="pill" id="chars">0 chars</span>
+          </div>
+          <pre id="out"></pre>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h2 style="margin:0">Presets</h2>
+            <button class="btn" id="loadBH">Load Bitcoin Hitpoint Strategist</button>
+          </div>
+          <p class="tiny tip">Use these to prefill and tweak. You can save your own variants.</p>
+          <div class="btnrow">
+            <button class="btn" id="presetYTS">YouTube Strategist</button>
+            <button class="btn" id="presetMentor">Trading Mentor</button>
+            <button class="btn" id="presetAnalyst">Data Analyst</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="margin:0 0 6px">How it works</h2>
+          <p class="tiny">This app assembles a structured prompt with consistent sections so models behave predictably and outputs are easier to evaluate. Shareable links include your form state in the URL hash; templates live in your browser only.</p>
+          <ul class="tiny">
+            <li><span class="kbd">Copy</span> copies a plain-text prompt; <span class="kbd">Copy as Markdown</span> adds <code>##</code> headings.</li>
+            <li>Use <span class="kbd">Download .txt</span> to store a prompt recipe in your repo.</li>
+            <li>Click <span class="kbd">Save Template</span> to keep the current configuration in localStorage.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2 style="margin:0 0 6px">Quality guardrails</h2>
+          <p class="tiny">Toggle the anti-hallucination clause to require sources, uncertainty flags, and refusal on missing info.</p>
+          <pre class="tiny">- If information may be outdated or missing, explicitly state uncertainty.
+- Cite concrete dates when referencing time-sensitive facts.
+- Do not fabricate facts, links, or data. Ask for missing inputs.
+- Prefer concise, verifiable claims; use checklists where possible.</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Made with ❤ — Host this file on GitHub Pages. No backend, no tracking.</div>
+  </div>
+
+<script>
+  const el = id => document.getElementById(id);
+  const fields = ["role","tone","goal","aud","fmt","ctx","cons","rules","shots","steps","ask"];
+
+  function buildPrompt(asMarkdown=false){
+    const v = Object.fromEntries(fields.map(f=>[f, el(f).value.trim()]));
+    const clause = el('antiHalluc').checked ? `
+
+## Quality & Honesty
+- If information may be outdated or missing, explicitly state uncertainty.
+- Cite concrete dates when referencing time-sensitive facts.
+- Do not fabricate facts, links, or data. Ask for missing inputs.
+- Prefer concise, verifiable claims; use checklists where possible.` : '';
+
+    const sections = [
+      ["Role", v.role],
+      ["Goal", v.goal],
+      ["Tone", v.tone],
+      ["Audience", v.aud],
+      ["Output Format", v.fmt],
+      ["Key Inputs / Context", v.ctx],
+      ["Constraints", v.cons],
+      ["Do / Don't", v.rules],
+      ["Examples (Few-shot)", v.shots],
+      ["Step Plan", v.steps],
+      ["Final Ask", v.ask]
+    ].filter(([_,text])=>text && text.length>0);
+
+    let out='';
+    if(asMarkdown){
+      out = sections.map(([k,t])=>`## ${k}\n${t}`).join("\n\n") + clause;
+    } else {
+      out = sections.map(([k,t])=>`${k}:\n${t}`).join("\n\n") + clause.replaceAll('## ','');
+    }
+    el('out').textContent = out.trim();
+    el('chars').textContent = out.length + ' chars';
+    return out.trim();
+  }
+
+  el('build').onclick = () => buildPrompt(true);
+  el('copy').onclick = async ()=>{
+    const txt = buildPrompt(false);
+    await navigator.clipboard.writeText(txt);
+    flash('Copied!');
+  };
+  el('copyMD').onclick = async ()=>{
+    const txt = buildPrompt(true);
+    await navigator.clipboard.writeText(txt);
+    flash('Markdown copied!');
+  };
+  el('download').onclick = ()=>{
+    const txt = buildPrompt(true);
+    const blob = new Blob([txt], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'prompt.txt';
+    a.click();
+  };
+  el('clear').onclick = ()=>{
+    fields.forEach(f=>el(f).value='');
+    el('out').textContent='';
+    el('chars').textContent='0 chars';
+  };
+
+  function flash(msg){
+    const b = document.createElement('div');
+    b.textContent = msg; b.style.position='fixed'; b.style.right='16px'; b.style.bottom='16px'; b.style.padding='10px 14px'; b.style.background='var(--ok)'; b.style.color='#041a0f'; b.style.borderRadius='12px'; b.style.fontWeight='700'; b.style.boxShadow='0 6px 16px rgba(0,0,0,.25)';
+    document.body.appendChild(b); setTimeout(()=>b.remove(),1200);
+  }
+
+  // Share: encode form state into URL hash
+  el('share').onclick = ()=>{
+    const state = Object.fromEntries(fields.map(f=>[f, el(f).value]));
+    state.anti = el('antiHalluc').checked;
+    const h = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    const url = location.origin + location.pathname + '#' + h;
+    navigator.clipboard.writeText(url).then(()=>flash('Sharable link copied!'));
+  };
+
+  // Load hash state on open
+  function loadFromHash(){
+    if(location.hash.length>1){
+      try{
+        const raw = location.hash.substring(1);
+        const obj = JSON.parse(decodeURIComponent(escape(atob(raw))));
+        fields.forEach(f=>{ if(obj[f]) el(f).value=obj[f];});
+        if(typeof obj.anti==='boolean') el('antiHalluc').checked=obj.anti;
+        buildPrompt(true);
+      }catch(e){console.warn('Bad hash', e)}
+    }
+  }
+  loadFromHash();
+
+  // Templates in localStorage
+  function refreshTemplates(){
+    const box = el('templates');
+    box.innerHTML = '<option value="">Load Template…</option>';
+    Object.keys(localStorage).filter(k=>k.startsWith('pf:')).forEach(k=>{
+      const name = k.slice(3);
+      const opt = document.createElement('option');
+      opt.value=k; opt.textContent=name; box.appendChild(opt);
+    });
+  }
+  refreshTemplates();
+
+  el('save').onclick = ()=>{
+    const name = prompt('Template name (e.g., YT Strategist)');
+    if(!name) return;
+    const state = Object.fromEntries(fields.map(f=>[f, el(f).value]));
+    state.anti = el('antiHalluc').checked;
+    localStorage.setItem('pf:'+name, JSON.stringify(state));
+    refreshTemplates();
+    flash('Saved');
+  };
+  el('templates').onchange = (e)=>{
+    const key = e.target.value; if(!key) return;
+    const obj = JSON.parse(localStorage.getItem(key)||'{}');
+    fields.forEach(f=>{ el(f).value = obj[f] || ''; });
+    el('antiHalluc').checked = !!obj.anti;
+    buildPrompt(true);
+  };
+
+  // Presets
+  function fillPreset(data){
+    Object.entries(data).forEach(([k,v])=>{ if(el(k)) el(k).value=v; });
+    el('antiHalluc').checked = true; buildPrompt(true);
+  }
+
+  el('presetYTS').onclick = ()=>fillPreset({
+    role:"You are a senior YouTube content strategist for a crypto education brand.",
+    tone:"Formal, creative, hook-first, retention-minded.",
+    goal:"Produce 10 short video ideas with a strong first 3 seconds and a mini CTA.",
+    aud:"18–34, beginner-to-intermediate Indian crypto traders.",
+    fmt:"Markdown list. For each idea: Title (≤70 chars), 1-line hook, 3 bullet beats, CTA.",
+    cons:"Avoid financial advice; no price targets; avoid hype.",
+    rules:"Do: practical, curiosity-driven hooks. Don't: jargon without explanation.",
+    ask:"Generate now."
+  });
+
+  el('presetMentor').onclick = ()=>fillPreset({
+    role:"You are a trading mentor writing a telegram-style daily tip.",
+    tone:"Direct, concise, encouraging.",
+    goal:"Craft a 70–90 word message teaching one risk rule with an example.",
+    aud:"Early-stage traders.",
+    fmt:"Short paragraphs, bold key term, end with 1 actionable step.",
+    cons:"No signals; include a generic disclaimer.",
+    rules:"Do: explain with numbers. Don't: vague motivation only.",
+    ask:"Write 3 variants."
+  });
+
+  el('presetAnalyst').onclick = ()=>fillPreset({
+    role:"You are a data analyst summarizing channel performance from a CSV.",
+    tone:"Analytical, crisp, no fluff.",
+    goal:"Identify top 3 drivers of view variance, and 5 actionable experiments.",
+    aud:"Internal content team.",
+    fmt:"Sections: Findings, Evidence, Experiments. Bullets only.",
+    cons:"Note caveats; time-bound claims must include dates.",
+    rules:"Do: mention effect sizes. Don't: speculate without data.",
+    ask:"Draft the summary."
+  });
+
+  el('loadBH').onclick = ()=>fillPreset({
+    role:"You are a professional strategist for Bitcoin Hitpoint (TWS).",
+    tone:"Formal yet creative; punchy and practical.",
+    goal:"Create 12 reel hooks tied to current macro headlines that affect BTC.",
+    aud:"Crypto-curious Indian audience.",
+    fmt:"Markdown. Each hook + 1-line angle + 1 CTA.",
+    cons:"No predictions; add disclaimer; avoid sensational framing.",
+    rules:"Do: explain with simple math or analogy. Don't: clickbait numbers.",
+    ask:"Generate now."
+  });
+</script>
+</body>
+</html>
